@@ -1,0 +1,504 @@
+/* SongShift-Style Review Interface */
+
+.songshift-review-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.songshift-review-dialog {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.review-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+}
+
+.close-button {
+  background: #f5f5f5;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background: #e0e0e0;
+}
+
+/* Instructions */
+.review-instructions {
+  padding: 16px 24px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-instructions p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.ignore-all-button {
+  background: none;
+  border: none;
+  color: #ff4444;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.ignore-all-button:hover {
+  color: #cc0000;
+}
+
+/* Current Track Info */
+.current-track-info {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.track-counter {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.original-track h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.track-card.original {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: default;
+}
+
+.track-card.original .track-name {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+/* Alternate Versions */
+.alternate-versions-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.alternate-versions-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.alternatives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Track Cards */
+.track-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  position: relative;
+}
+
+.track-card:hover {
+  border-color: #ff4444;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.1);
+}
+
+.track-card.selected {
+  border-color: #ff4444;
+  background: #fff5f5;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.2);
+}
+
+.track-card.unavailable {
+  opacity: 0.6;
+  cursor: default;
+  border-color: #bdbdbd;
+}
+
+.track-artwork {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  margin-right: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.placeholder-artwork {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  margin-right: 16px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.play-icon {
+  color: #999;
+  font-size: 20px;
+}
+
+.track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.track-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.track-artist {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.track-album {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.track-duration {
+  font-size: 12px;
+  color: #999;
+}
+
+/* Explicit Badge */
+.explicit-badge {
+  background: #999;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Match Info */
+.match-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.confidence-badge {
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.match-method {
+  font-size: 11px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.match-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.match-score {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Selection Indicators */
+.selection-indicator {
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.arrow {
+  width: 32px;
+  height: 32px;
+  background: #ff4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.selected-arrow {
+  width: 32px;
+  height: 32px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.radio-button {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Ignore Option */
+.ignore-option {
+  border: 2px dashed #ccc;
+  background: #fafafa;
+  justify-content: center;
+  text-align: center;
+}
+
+.ignore-option.selected {
+  border-color: #999;
+  background: #f0f0f0;
+}
+
+.ignore-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.ignore-text {
+  font-weight: 600;
+  color: #666;
+}
+
+/* Navigation */
+.review-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.nav-button {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-button:hover:not(:disabled) {
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.progress-indicator {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Not Available Section */
+.not-available-section {
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #fff3e0;
+}
+
+.not-available-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e65100;
+}
+
+.unavailable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.more-unavailable {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  padding: 8px;
+  font-style: italic;
+}
+
+/* Save Button */
+.review-actions {
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.save-button {
+  width: 100%;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #cc0000;
+}
+
+.save-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Review Summary */
+.review-summary {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.review-summary h2 {
+  margin: 0 0 16px 0;
+  color: #4caf50;
+}
+
+.review-summary p {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Scrollbar Styling */
+.alternatives-list::-webkit-scrollbar,
+.unavailable-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.alternatives-list::-webkit-scrollbar-track,
+.unavailable-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.alternatives-list::-webkit-scrollbar-thumb,
+.unavailable-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.alternatives-list::-webkit-scrollbar-thumb:hover,
+.unavailable-list::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .songshift-review-dialog {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .track-card {
+    padding: 12px;
+  }
+  
+  .track-artwork,
+  .placeholder-artwork {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .review-header,
+  .review-instructions,
+  .current-track-info,
+  .alternate-versions-section,
+  .review-navigation,
+  .not-available-section,
+  .review-actions {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
