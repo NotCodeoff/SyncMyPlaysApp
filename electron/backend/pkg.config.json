@@ -1,0 +1,31 @@
+{
+  "entry": "index.js",
+  "targets": [
+    "node18-win-x64",
+    "node18-macos-x64",
+    "node18-linux-x64"
+  ],
+  "outputPath": "../dist-backend",
+  "assets": [
+    "data.json",
+    "server.cert"
+  ],
+  "scripts": [
+    "index.js"
+  ],
+  "ignore": [
+    "**/*.test.js",
+    "**/*.spec.js",
+    "**/*.d.ts",
+    "**/*.map",
+    "**/test/**",
+    "**/tests/**",
+    "**/docs/**",
+    "**/examples/**",
+    "**/README.md",
+    "**/CHANGELOG.md",
+    "**/LICENSE"
+  ],
+  "publicPackages": true,
+  "public": true
+}

@@ -1,0 +1,26 @@
+{
+  "spotify": {
+    "access_token": null,
+    "refresh_token": null,
+    "expires_at": null,
+    "user_id": null,
+    "display_name": null
+  },
+  "appleMusic": {
+    "developerToken": null,
+    "musicUserToken": null,
+    "user_id": null
+  },
+  "settings": {
+    "lastSync": null,
+    "autoSync": false
+  },
+  "spotifyTokens": {
+    "access_token": "BQA7yjnXxyqikWwq6X1_lFGLMsouwtShLMw9KqACrEl3S6PvLRiK1s8w3Uk678KpEJHXg8gJk1cPe9it86G0C6OZZxl92OYLL0CZrcfrnf4wW7SVbGhqcrCg4kwQBnpperMPJQyE8ti358CaYbK0Id7agjE_VmNO3MvaAX3xYmj8-Ds-anv01ardukFBKVx5a6Nwew4Uiy8x7PReUlBylRw3kLP7VmkQsLPETpO4iko7h5_7SileAJXnb-PW772sXYTIdkQFD3BYyn1ut3rNt00RzGwA9Eaj6LVrneeE5ZwX5mFKkGYxYi5XFOyJY-6R3ipVU4ixeQ",
+    "refresh_token": "AQDklHF3vRNYP8zr_oCJ8ZY69Nn48f2Rh9IWPhbZMDEY6yWhzKZLiiiqkn8LCht_9Yuykh4huAm1AF2DpRHUf72DuVanbJI0macd4-r5IeD_0_iCsl302mO9AId3izbXcH8"
+  },
+  "appleCredentials": {
+    "mediaUserToken": "AswqWdk5JaUxVQk4+cPITU1ddmk6Hl5KpElCwaVyyWG5Al5jCSU+GUuaPUCeaWqHJ38yLmGlAhxoyqn4TJ3ycB9fX119xta9j270hGyE9I39SEqrltQLDh5/GaZll0O7E+LKS2vACmj8lp5ZI4IwQ7+uFmj4j0NlGgjFH8jGkAcZeZaUvLfli9vb3En0bj764cChjLYZ2b3Jgv9c19P2y7HSih8d4nab+id8rQfv2fmmwFl/4g=="
+  },
+  "appleDeveloperToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNzU5OTcwNjMxLCJleHAiOjE3NjcyMjgyMzEsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.2olNgPLuL51wQBjlYwZWslVBxqV65I921NlgdXHazA9DL_-zksa42Lr4aiGC0TV3SAe4vs9FSRtdKe9gTCCiwQ"
+}
