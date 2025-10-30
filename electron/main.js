@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu, powerMonitor } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, powerMonitor, protocol } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs-extra');
@@ -194,10 +194,15 @@ function createWindow() {
     }
 
     if (chosenIndexPath) {
-      // Normalize for Windows and load with file:// URL for reliability
-      const fileUrl = url.pathToFileURL(chosenIndexPath).toString();
-      console.log('📂 Loading file URL:', fileUrl);
-      mainWindow.loadURL(fileUrl);
+      if (app.isPackaged) {
+        console.log('📂 Loading secure custom protocol: app://index.html');
+        mainWindow.loadURL('app://index.html');
+      } else {
+        // Normalize for Windows and load with file:// URL in development
+        const fileUrl = url.pathToFileURL(chosenIndexPath).toString();
+        console.log('📂 Loading file URL (dev):', fileUrl);
+        mainWindow.loadURL(fileUrl);
+      }
     } else {
       console.error('❌ index.html not found at any expected locations:', candidatePaths);
       // Force a visible error page to avoid a blank window
@@ -314,50 +319,50 @@ function startBackend() {
     electronVersion: process.versions.electron
   });
   
-  // Check if port 8000 is available (async check that doesn't block)
+  // Dynamically choose an available backend port (avoid blocking on 8000 conflicts)
   const net = require('net');
-  
-  function checkPortAndStart() {
+  let backendPort = parseInt(process.env.PORT, 10);
+  const candidatePorts = [];
+  if (!Number.isFinite(backendPort)) backendPort = 8000;
+  // Try a small range to avoid user prompts when ports are occupied
+  for (let p = backendPort; p < backendPort + 16; p++) candidatePorts.push(p);
+
+  function findFreePort(index = 0) {
+    if (index >= candidatePorts.length) {
+      console.error('❌ [DIAGNOSTIC] No free backend port found in candidate range');
+      dialog.showErrorBox('Backend Port Error', 'No free backend port found. Please close other apps and restart.');
+      return;
+    }
+
+    const portToTry = candidatePorts[index];
     const testServer = net.createServer();
     
     testServer.once('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        console.error('❌ [DIAGNOSTIC] CRITICAL: Port 8000 is already in use by another process!');
-        console.error('💡 [DIAGNOSTIC] Solution: Kill process on port 8000 or restart computer');
-        
-        // Try to find what's using the port
-        const { exec } = require('child_process');
-        exec('netstat -ano | findstr :8000', (error, stdout) => {
-          if (stdout) {
-            console.error('📊 [DIAGNOSTIC] Processes using port 8000:', stdout);
-          }
-        });
-        
-        dialog.showErrorBox('Backend Port Conflict', 'Port 8000 is already in use by another process. Please close any other applications using this port and restart SyncMyPlays.');
+        console.warn(`⚠️ [DIAGNOSTIC] Port ${portToTry} in use, trying next...`);
+        testServer.close();
+        findFreePort(index + 1);
       } else {
         console.error('❌ [DIAGNOSTIC] Port check error:', err.message);
-      }
       testServer.close();
+        findFreePort(index + 1);
+      }
     });
     
     testServer.once('listening', () => {
-      console.log('✅ [DIAGNOSTIC] Port 8000 is available');
-      
-      // IMPORTANT: Close the test server BEFORE starting backend
+      backendPort = portToTry;
+      console.log(`✅ [DIAGNOSTIC] Selected backend port: ${backendPort}`);
       testServer.close(() => {
-        console.log('✅ [DIAGNOSTIC] Test server closed, now starting backend...');
-        
-        // Wait a moment for port to be fully released
         setTimeout(() => {
-          startBackendProcess();
-        }, 100);
+          startBackendProcess(backendPort);
+        }, 50);
       });
     });
     
-    testServer.listen(8000, '127.0.0.1');
+    testServer.listen(portToTry, '127.0.0.1');
   }
   
-  function startBackendProcess() {
+  function startBackendProcess(selectedPort) {
     
     // Determine backend entry point
     let backendEntry;
@@ -424,7 +429,8 @@ function startBackend() {
         cwd: backendCwd,
         env: { 
           ...process.env, 
-          NODE_ENV: isDev ? 'development' : 'production'
+          NODE_ENV: isDev ? 'development' : 'production',
+          PORT: String(selectedPort)
         },
         stdio: ['pipe', 'pipe', 'pipe', 'ipc']
       });
@@ -471,7 +477,7 @@ function startBackend() {
         console.log('🔍 [DIAGNOSTIC] Performing backend health check...');
         const http = require('http');
         
-        const healthReq = http.get('http://127.0.0.1:8000/', (res) => {
+        const healthReq = http.get(`http://127.0.0.1:${selectedPort}/health`, (res) => {
           console.log('✅ [DIAGNOSTIC] Backend health check PASSED - Status:', res.statusCode);
           console.log('✅ [DIAGNOSTIC] Backend is responding to HTTP requests');
         });
@@ -501,8 +507,8 @@ function startBackend() {
     }
   }
   
-  // Start the port check and backend startup sequence
-  checkPortAndStart();
+  // Start dynamic port selection and backend startup
+  findFreePort();
 }
 
 function stopBackend() {
@@ -900,6 +906,11 @@ async function initializeBackgroundServices() {
 }
 
 // App event handlers
+// Register secure custom protocol BEFORE ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }
+]);
+
 app.whenReady().then(async () => {
   console.log('App ready, starting fast initialization...');
   
@@ -913,6 +924,29 @@ app.whenReady().then(async () => {
     console.log('Failed to set app name or AppUserModelID:', e?.message || e);
   }
   
+  // Serve static files for app:// in production
+  try {
+    protocol.handle('app', async (req) => {
+      const requestUrl = new URL(req.url);
+      let filePath = requestUrl.pathname === '/' ? '/index.html' : requestUrl.pathname;
+      const path = require('path');
+      const fs = require('fs/promises');
+      // Adjust base to dist next to main bundle
+      const distPath = path.join(__dirname, '..', 'dist');
+      const full = path.join(distPath, decodeURIComponent(filePath));
+      const data = await fs.readFile(full);
+      const ext = full.split('.').pop() || 'html';
+      const m = {
+        html:'text/html', js:'text/javascript', mjs:'text/javascript', css:'text/css', json:'application/json',
+        png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', svg:'image/svg+xml', ico:'image/x-icon', txt:'text/plain'
+      };
+      const mime = m[ext] || 'text/plain';
+      return new Response(data, { headers: { 'Content-Type': mime } });
+    });
+  } catch (e) {
+    console.warn('Failed to register app:// protocol handler:', e?.message || e);
+  }
+
   // Create window IMMEDIATELY for fast startup
   console.log('Creating main window...');
   createWindow();

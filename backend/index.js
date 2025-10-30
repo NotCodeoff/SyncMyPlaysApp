@@ -39,6 +39,7 @@ secureConsole.log('Environment variables configured successfully');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const querystring = require('querystring');
 const http = require('http');
 // Use regular puppeteer-core (no plugins) to avoid pkg compilation issues
@@ -212,7 +213,7 @@ class SimpleStore {
 }
 
 const app = express();
-const PORT = 8000;
+const PORT = parseInt(process.env.PORT, 10) || 8000;
 
 // WebSocket server for real-time progress updates
 const server = http.createServer(app);
@@ -305,12 +306,54 @@ wss.on('connection', (ws) => {
   });
 });
 
-app.use(cors());
+// CORS configured via ALLOW_ORIGINS env; supports Electron app:// when ALLOW_ORIGINS includes "app://."
+const allowList = (process.env.ALLOW_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const corsOptions = {
+  origin: function (origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowList.includes(origin) || (origin.startsWith('app://') && allowList.includes('app://.'))) {
+      return cb(null, true);
+    }
+    cb(new Error(`CORS not allowed for origin: ${origin}`));
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Simple health endpoint
+app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// Apple Music developer token endpoint (server-signed)
+function getApplePrivateKey() {
+  const b64 = process.env.APPLE_MUSIC_PRIVATE_KEY_BASE64;
+  if (!b64) throw new Error('APPLE_MUSIC_PRIVATE_KEY_BASE64 missing');
+  return Buffer.from(b64, 'base64').toString('utf8');
+}
+
+app.get('/apple/developer-token', (req, res) => {
+  try {
+    const teamId = process.env.APPLE_MUSIC_TEAM_ID;
+    const keyId  = process.env.APPLE_MUSIC_KEY_ID;
+    const priv   = getApplePrivateKey();
+
+    const now = Math.floor(Date.now() / 1000);
+    const token = jwt.sign(
+      { iss: teamId, iat: now, exp: now + 60 * 60 * 24 * 30 },
+      priv,
+      { algorithm: 'ES256', header: { alg: 'ES256', kid: keyId } }
+    );
+
+    res.json({ token });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
 
 // Mount advanced sync routes
 const advancedSyncRouter = require('./routes/advancedSync');
 const songshiftSyncRouter = require('./routes/songshiftSync');
+const appleRouter = require('./routes/apple');
 
 // Initialize storage
 const store = new SimpleStore();
@@ -321,6 +364,7 @@ let appleCredentials = store.get('appleCredentials', { mediaUserToken: null });
 
 app.use('/api/sync/advanced', advancedSyncRouter);
 app.use('/api/sync/songshift', songshiftSyncRouter);
+app.use('/apple', appleRouter);
 // Auto Sync persistent jobs
 let autoSyncJobs = store.get('autoSyncJobs', []);
 function persistAutoSyncJobs() { store.set('autoSyncJobs', autoSyncJobs); }

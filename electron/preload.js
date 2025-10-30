@@ -29,3 +29,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 delete window.require;
 delete window.exports;
 delete window.module;
+
+// Minimal diagnostics for secure context and origin (does not expose node APIs)
+try {
+  contextBridge.exposeInMainWorld('electronEnv', {
+    isElectron: true,
+    secureContext: window.isSecureContext,
+    origin: location.origin,
+  });
+} catch (_) {
+  // ignore
+}
