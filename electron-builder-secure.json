@@ -1,0 +1,79 @@
+{
+  "appId": "com.syncmyplays.app",
+  "productName": "SyncMyPlays",
+  "directories": {
+    "output": "dist-new-secure"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "dist-backend/**/*",
+    "package.json",
+    "node_modules/**/*",
+    "!**/*.map",
+    "!**/*.ts",
+    "!**/*.js.map",
+    "!**/src/**/*",
+    "!**/public/**/*",
+    "!**/webpack.config.js",
+    "!**/tailwind.config.js",
+    "!**/postcss.config.js",
+    "!**/scripts/**/*",
+    "!**/electron-builder-secure.json",
+    "!**/electron-builder.json",
+    "!**/.git/**/*",
+    "!**/.vscode/**/*",
+    "!**/README.md",
+    "!**/package-lock.json"
+  ],
+  "asar": true,
+  "asarUnpack": [
+    "node_modules/**/*",
+    "electron/config.js",
+    "dist-backend/**/*"
+  ],
+  "compression": "maximum",
+  "removePackageScripts": true,
+  "removePackageKeywords": true,
+  "win": {
+    "target": "nsis",
+    "executableName": "SyncMyPlays",
+    "icon": "build/icon.ico",
+    "signAndEditExecutable": false,
+    "requestedExecutionLevel": "requireAdministrator",
+    "artifactName": "SyncMyPlays-Setup-${version}-${arch}.${ext}",
+    "publisherName": "SyncMyPlays Team"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "deleteAppDataOnUninstall": true,
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "artifactName": "SyncMyPlays-Setup-${version}-${arch}.${ext}",
+    "installerLanguages": ["en-US"],
+    "language": "1033",
+    "perMachine": false,
+    "allowElevation": true,
+    "runAfterFinish": false,
+    "menuCategory": "SyncMyPlays",
+    "shortcutName": "SyncMyPlays"
+  },
+  "extraResources": [
+    {
+      "from": "electron/config.js",
+      "to": "config.js",
+      "filter": ["**/*"]
+    },
+    {
+      "from": "build/icon.ico",
+      "to": "icon.ico",
+      "filter": ["**/*"]
+    }
+  ],
+  "publish": null,
+  "beforeBuild": "scripts/before-build.js",
+  "afterPack": "scripts/after-pack.js"
+}

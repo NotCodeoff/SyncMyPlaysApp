@@ -1,0 +1,9 @@
+{
+  "APP_VERSION": "1.0.0",
+  "UPDATE_URLS": {
+    "versionCheck": "https://example.com/version_status.txt",
+    "downloadUrl": "https://example.com/syncmyplays.exe"
+  },
+  "KILL_SWITCH_URL": "https://example.com/kill_switch.txt",
+  "VERSION_URL": "https://example.com/version_status.txt"
+}
