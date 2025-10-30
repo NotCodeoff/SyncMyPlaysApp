@@ -16,79 +16,38 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ current, onNavigate, theme = 'apple' }) => {
   const openWebVersion = async () => {
-    // Try multiple possible URLs
-    const urls = [
-      'http://localhost:8080',  // Vite web version
-      'http://[::1]:8080',      // IPv6 Vite
-      'http://localhost:3000',  // Webpack dev server
-      'http://[::1]:3000',      // IPv6 Webpack
+    // Try common dev ports: Vite (8080/8081/5173), Webpack (3000)
+    const candidates = [
+      'http://localhost:8080/',
+      'http://localhost:8081/',
+      'http://localhost:5173/',
+      'http://localhost:3000/',
     ];
-    
-    // Try to find which one is running
-    let workingUrl = null;
-    
-    try {
-      // Check if web version is running on 8080
-      const response8080 = await fetch('http://localhost:8080/health', { 
-        method: 'GET',
-        mode: 'no-cors',
-        timeout: 2000 
-      }).catch(() => null);
-      
-      if (response8080) {
-        workingUrl = 'http://localhost:8080';
-      } else {
-        // Check if webpack dev server is running on 3000
-        const response3000 = await fetch('http://localhost:3000/health', { 
-          method: 'GET',
-          mode: 'no-cors',
-          timeout: 2000 
-        }).catch(() => null);
-        
-        if (response3000) {
-          workingUrl = 'http://localhost:3000';
+
+    // Probe each candidate with its own timeout controller to avoid aborting subsequent tries
+    let chosen: string | null = null;
+    for (const url of candidates) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      try {
+        const res = await fetch(url, { method: 'HEAD', signal: controller.signal }).catch(() => null as any);
+        if (res && typeof res.status === 'number' && res.status < 500) {
+          chosen = url;
+          clearTimeout(timeoutId);
+          break;
         }
+      } catch (_) {
+        // try next
+      } finally {
+        clearTimeout(timeoutId);
       }
-    } catch (error) {
-      console.log('Could not detect running web server');
     }
-    
-    if (workingUrl) {
-      // Web version is running, open it
-      if (window.electronAPI) {
-        window.electronAPI.openExternal(workingUrl);
-      } else {
-        window.open(workingUrl, '_blank');
-      }
+
+    const finalUrl = chosen || candidates[0];
+    if (window.electronAPI) {
+      window.electronAPI.openExternal(finalUrl);
     } else {
-      // Web version is not running, show instructions
-      const message = `
-🌐 Web Version Not Running
-
-To use the web version, you need to start it first:
-
-1. Open Command Prompt or PowerShell
-2. Navigate to your SyncMyPlays folder
-3. Run: cd web
-4. Run: npm run dev
-5. Wait for it to start (you'll see "Local: http://localhost:8080")
-6. Then click "Open Web Version" again
-
-Alternatively, you can:
-- Use the desktop app (which you're already using!)
-- Or run: npm run start:both (starts both desktop and web)
-
-The web version runs on http://localhost:8080
-      `;
-      
-      alert(message);
-      
-      // Also try to open the URL anyway (in case it starts up)
-      if (window.electronAPI) {
-        window.electronAPI.openExternal('http://localhost:8080');
-      } else {
-        window.open('http://localhost:8080', '_blank');
-      }
+      window.open(finalUrl, '_blank');
     }
   };
 
@@ -97,22 +56,27 @@ The web version runs on http://localhost:8080
     apple: {
       gradient: 'linear-gradient(135deg, #ec4899 0%, #ef4444 100%)',
       hoverGradient: 'linear-gradient(135deg, #f43f5e 0%, #dc2626 100%)',
-      shadow: 'rgba(236, 72, 153, 0.5)',
+      // dual-tone glow to match the pink→red gradient
+      shadow1: 'rgba(236, 72, 153, 0.45)', // pink
+      shadow2: 'rgba(239, 68, 68, 0.35)',  // red
     },
     purple: {
       gradient: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
       hoverGradient: 'linear-gradient(135deg, #c084fc 0%, #9333ea 100%)',
-      shadow: 'rgba(168, 85, 247, 0.5)',
+      shadow1: 'rgba(192, 132, 252, 0.45)',
+      shadow2: 'rgba(124, 58, 237, 0.35)',
     },
     blue: {
       gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
       hoverGradient: 'linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%)',
-      shadow: 'rgba(59, 130, 246, 0.5)',
+      shadow1: 'rgba(96, 165, 250, 0.45)',
+      shadow2: 'rgba(29, 78, 216, 0.35)',
     },
     green: {
       gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
       hoverGradient: 'linear-gradient(135deg, #34d399 0%, #047857 100%)',
-      shadow: 'rgba(16, 185, 129, 0.5)',
+      shadow1: 'rgba(52, 211, 153, 0.45)',
+      shadow2: 'rgba(4, 120, 87, 0.35)',
     },
   };
 
@@ -153,12 +117,15 @@ The web version runs on http://localhost:8080
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = `0 8px 20px ${currentTheme.shadow}`;
+          // layered glow that matches the gradient hues
+          const s1 = (currentTheme as any).shadow1 || 'rgba(0,0,0,0.3)';
+          const s2 = (currentTheme as any).shadow2 || 'rgba(0,0,0,0.2)';
+          e.currentTarget.style.boxShadow = `0 10px 24px ${s2}, 0 6px 14px ${s1}`;
           e.currentTarget.style.background = currentTheme.hoverGradient;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.12)';
           e.currentTarget.style.background = currentTheme.gradient;
         }}
       >
